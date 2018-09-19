@@ -3,6 +3,7 @@ import * as moment from 'moment';
 import { TimePickerProps } from '../time-picker';
 
 export interface PickerProps {
+  id?: number | string;
   prefixCls?: string;
   inputPrefixCls?: string;
   format?: string;
@@ -11,6 +12,7 @@ export interface PickerProps {
   className?: string;
   style?: React.CSSProperties;
   popupStyle?: React.CSSProperties;
+  dropdownClassName?: string;
   locale?: any;
   size?: 'large' | 'small' | 'default';
   getCalendarContainer?: (triggerNode: Element) => HTMLElement;
@@ -53,7 +55,7 @@ export type RangePickerValue =
   [moment.Moment] |
   [undefined, moment.Moment] |
   [moment.Moment, moment.Moment];
-export type RangePickerRange = RangePickerValue | (() => RangePickerValue);
+export type RangePickerPresetRange = RangePickerValue | (() => RangePickerValue);
 
 export interface RangePickerProps extends PickerProps {
   className?: string;
@@ -65,7 +67,7 @@ export interface RangePickerProps extends PickerProps {
   onOk?: (selectedTime: moment.Moment) => void;
   showTime?: TimePickerProps | boolean;
   ranges?: {
-    [range: string]: RangePickerRange,
+    [range: string]: RangePickerPresetRange,
   };
   placeholder?: [string, string];
   mode?: string | string[];
@@ -77,7 +79,7 @@ export interface RangePickerProps extends PickerProps {
   onPanelChange?: (value?: RangePickerValue, mode?: string | string[]) => void;
 }
 
-export interface WeexPickerProps extends PickerProps, SinglePickerProps {
+export interface WeekPickerProps extends PickerProps, SinglePickerProps {
   className?: string;
   placeholder?: string;
 }
@@ -85,5 +87,5 @@ export interface WeexPickerProps extends PickerProps, SinglePickerProps {
 export interface DatePickerDecorator extends React.ClassicComponentClass<DatePickerProps> {
   RangePicker: React.ClassicComponentClass<RangePickerProps>;
   MonthPicker: React.ClassicComponentClass<MonthPickerProps>;
-  WeekPicker: React.ClassicComponentClass<WeexPickerProps>;
+  WeekPicker: React.ClassicComponentClass<WeekPickerProps>;
 }

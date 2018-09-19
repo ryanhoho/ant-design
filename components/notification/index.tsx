@@ -85,6 +85,7 @@ function getNotificationInstance(prefixCls: string, placement: NotificationPlace
     className: `${prefixCls}-${placement}`,
     style: getPlacementStyle(placement),
     getContainer: defaultGetContainer,
+    closeIcon: <Icon className={`${prefixCls}-close-icon`} type={'close'}/>,
   }, (notification: any) => {
     notificationInstance[cacheKey] = notification;
     callback(notification);
@@ -94,7 +95,7 @@ function getNotificationInstance(prefixCls: string, placement: NotificationPlace
 const typeToIcon = {
   success: 'check-circle-o',
   info: 'info-circle-o',
-  error: 'cross-circle-o',
+  error: 'close-circle-o',
   warning: 'exclamation-circle-o',
 };
 
@@ -104,7 +105,7 @@ export interface ArgsProps {
   btn?: React.ReactNode;
   key?: string;
   onClose?: () => void;
-  duration?: number;
+  duration?: number | null;
   icon?: React.ReactNode;
   placement?: NotificationPlacement;
   style?: React.CSSProperties;

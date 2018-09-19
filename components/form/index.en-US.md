@@ -56,7 +56,18 @@ The following `options` are available:
 | mapPropsToFields | Convert props to field value(e.g. reading the values from Redux store). And you must mark returned fields with [`Form.createFormField`](#Form.createFormField) | (props) => Object{ fieldName: FormField { value } } |
 | validateMessages | Default validate message. And its format is similar with [newMessages](https://github.com/yiminghe/async-validator/blob/master/src/messages.js)'s returned value | Object { [nested.path]&#x3A; String } |
 | onFieldsChange | Specify a function that will be called when the value a `Form.Item` gets changed. Usage example: saving the field's value to Redux store. | Function(props, fields) |
-| onValuesChange | A handler while value of any field is changed | (props, values) => void |
+| onValuesChange | A handler while value of any field is changed | (props, changedValues, allValues) => void |
+
+If you want to get `ref` after `Form.create`, you can use `wrappedComponentRef` provided by `rc-form`，[details can be viewed here](https://github.com/react-component/form#note-use-wrappedcomponentref-instead-of-withref-after-rc-form140).
+
+```jsx
+class CustomizedForm extends React.Component { ... }
+
+// use wrappedComponentRef
+const EnhancedForm =  Form.create()(CustomizedForm);
+<EnhancedForm wrappedComponentRef={(form) => this.form = form} />
+this.form // => The instance of CustomizedForm
+```
 
 If the form has been decorated by `Form.create` then it has `this.props.form` property. `this.props.form` provides some APIs as follows:
 
@@ -88,6 +99,40 @@ If the form has been decorated by `Form.create` then it has `this.props.form` pr
 | options.force | Should validate validated field again when `validateTrigger` is been triggered again | boolean | false |
 | options.scroll | Config scroll behavior of `validateFieldsAndScroll`, more: [dom-scroll-into-view's config](https://github.com/yiminghe/dom-scroll-into-view#function-parameter) | Object | {} |
 
+#### Callback arguments example of validateFields
+
+- `errors`:
+
+   ```js
+   {
+     "userName": {
+       "errors": [
+         {
+           "message": "Please input your username!",
+           "field": "userName"
+         }
+       ]
+     },
+     "password": {
+       "errors": [
+         {
+           "message": "Please input your Password!",
+           "field": "password"
+         }
+       ]
+     }
+   }
+   ```
+
+- `values`:
+
+   ```js
+   {
+     "userName": "username",
+     "password": "password",
+   }
+   ```
+
 ### Form.createFormField
 
 To mark the returned fields data in `mapPropsToFields`, [demo](#components-form-demo-global-state).
@@ -111,6 +156,7 @@ After wrapped by `getFieldDecorator`, `value`(or other property defined by `valu
 | -------- | ----------- | ---- | ------------- |
 | id | The unique identifier is required. support [nested fields format](https://github.com/react-component/form/pull/48). | string |  |
 | options.getValueFromEvent | Specify how to get value from event or other onChange arguments | function(..args) | [reference](https://github.com/react-component/form#option-object) |
+| options.getValueProps | Get the component props according to field value. | function(value): any | [reference](https://github.com/react-component/form#option-object)
 | options.initialValue | You can specify initial value, type, optional value of children node. (Note: Because `Form` will test equality with `===` internaly, we recommend to use vairable as `initialValue`, instead of literal) |  | n/a |
 | options.normalize | Normalize value to form component, [a select-all example](https://codepen.io/afc163/pen/JJVXzG?editors=001) | function(value, prevValue, allValues): any | - |
 | options.rules | Includes validation rules. Please refer to "Validation Rules" part for details. | object\[] | n/a |
@@ -147,7 +193,7 @@ Note:
 | enum | validate a value from a list of possible values | string | - |
 | len | validate an exact length of a field | number | - |
 | max | validate a max length of a field | number | - |
-| message | validation error message | string | - |
+| message | validation error message | string\|ReactNode | - |
 | min | validate a min length of a field | number | - |
 | pattern | validate from a regular expression | RegExp | - |
 | required | indicates whether field is required | boolean | `false` |

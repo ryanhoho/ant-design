@@ -3,9 +3,10 @@ import RcDropdown from 'rc-dropdown';
 import classNames from 'classnames';
 import DropdownButton from './dropdown-button';
 import warning from '../_util/warning';
+import Icon from '../icon';
 
 export interface DropDownProps {
-  trigger?: ('click' | 'hover'| 'contextMenu')[];
+  trigger?: ('click' | 'hover' | 'contextMenu')[];
   overlay: React.ReactNode;
   onVisibleChange?: (visible?: boolean) => void;
   visible?: boolean;
@@ -41,32 +42,55 @@ export default class Dropdown extends React.Component<DropDownProps, any> {
 
   componentDidMount() {
     const { overlay } = this.props;
-    const overlayProps = (overlay as any).props as any;
-    warning(
-      !overlayProps.mode || overlayProps.mode === 'vertical',
-      `mode="${overlayProps.mode}" is not supported for Dropdown\'s Menu.`,
-    );
+    if (overlay) {
+      const overlayProps = (overlay as React.ReactElement<any>).props;
+      warning(
+        !overlayProps.mode || overlayProps.mode === 'vertical',
+        `mode="${overlayProps.mode}" is not supported for Dropdown\'s Menu.`,
+      );
+    }
   }
 
   render() {
-    const { children, prefixCls, overlay, trigger, disabled } = this.props;
-    const dropdownTrigger = React.cloneElement(children as any, {
-      className: classNames((children as any).props.className, `${prefixCls}-trigger`),
+    const { children, prefixCls, overlay: overlayElements, trigger, disabled } = this.props;
+
+    const child = React.Children.only(children);
+    const overlay = React.Children.only(overlayElements);
+
+    const dropdownTrigger = React.cloneElement(child, {
+      className: classNames(child.props.className, `${prefixCls}-trigger`),
       disabled,
     });
     // menu cannot be selectable in dropdown defaultly
-    const overlayProps = overlay && (overlay as any).props;
-    const selectable = (overlayProps && 'selectable' in overlayProps)
-      ? overlayProps.selectable : false;
-    const fixedModeOverlay = React.cloneElement(overlay as any, {
-      mode: 'vertical',
-      selectable,
-    });
+    // menu should be focusable in dropdown defaultly
+    const { selectable = false, focusable = true } = overlay.props;
+
+    const expandIcon = (
+      <span className={`${prefixCls}-menu-submenu-arrow`}>
+        <Icon type="right" className={`${prefixCls}-menu-submenu-arrow-icon`} />
+      </span>
+    );
+
+    const fixedModeOverlay = typeof overlay.type === 'string'
+      ? overlay : React.cloneElement(overlay, {
+        mode: 'vertical',
+        selectable,
+        focusable,
+        expandIcon,
+      });
+
+    const triggerActions = disabled ? [] : trigger;
+    let alignPoint;
+    if (triggerActions && triggerActions.indexOf('contextMenu') !== -1) {
+      alignPoint = true;
+    }
+
     return (
       <RcDropdown
+        alignPoint={alignPoint}
         {...this.props}
         transitionName={this.getTransitionName()}
-        trigger={disabled ? [] : trigger}
+        trigger={triggerActions}
         overlay={fixedModeOverlay}
       >
         {dropdownTrigger}

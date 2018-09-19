@@ -10,20 +10,21 @@ export interface MentionProps {
   prefixCls?: string;
   suggestionStyle?: React.CSSProperties;
   suggestions?: Array<any>;
-  onSearchChange?: Function;
-  onChange?: Function;
+  onSearchChange?: (value: string, trigger: string) => any;
+  onChange?: (contentState: any) => any;
   notFoundContent?: any;
-  loading?: Boolean;
+  loading?: boolean;
   style?: React.CSSProperties;
   defaultValue?: any;
   value?: any;
   className?: string;
-  multiLines?: Boolean;
-  prefix?: string;
+  multiLines?: boolean;
+  prefix?: string | string[];
   placeholder?: string;
   getSuggestionContainer?: (triggerNode: Element) => HTMLElement;
   onFocus?: React.FocusEventHandler<HTMLElement>;
   onBlur?: React.FocusEventHandler<HTMLElement>;
+  onSelect?: (suggestion: string, data?: any) => any;
   readOnly?: boolean;
   disabled?: boolean;
   placement?: MentionPlacement;
@@ -111,7 +112,7 @@ export default class Mention extends React.Component<MentionProps, MentionState>
     }
   }
   focus = () => {
-    this.mentionEle._editor.focus();
+    this.mentionEle._editor.focusEditor();
   }
   mentionRef = (ele: any) => {
     this.mentionEle = ele;

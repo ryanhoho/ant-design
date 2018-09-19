@@ -15,10 +15,11 @@ Components which need localization support are listed here, you can toggle the l
 
 ````jsx
 import { LocaleProvider, Pagination, DatePicker, TimePicker, Calendar,
-         Popconfirm, Table, Modal, Button, Select, Transfer, Radio } from 'antd';
+  Popconfirm, Table, Modal, Button, Select, Transfer, Radio } from 'antd';
 import zhCN from 'antd/lib/locale-provider/zh_CN';
 import moment from 'moment';
 import 'moment/locale/zh-cn';
+
 moment.locale('en');
 
 const Option = Select.Option;
@@ -40,12 +41,15 @@ class Page extends React.Component {
   state = {
     visible: false,
   }
+
   showModal = () => {
     this.setState({ visible: true });
   }
+
   hideModal = () => {
     this.setState({ visible: false });
   }
+
   render() {
     const info = () => {
       Modal.info({
@@ -103,7 +107,6 @@ class Page extends React.Component {
   }
 }
 
-let forceRerender = 0;
 class App extends React.Component {
   constructor() {
     super();
@@ -111,6 +114,7 @@ class App extends React.Component {
       locale: null,
     };
   }
+
   changeLocale = (e) => {
     const localeValue = e.target.value;
     this.setState({ locale: localeValue });
@@ -120,18 +124,20 @@ class App extends React.Component {
       moment.locale('zh-cn');
     }
   }
+
   render() {
+    const { locale } = this.state;
     return (
       <div>
         <div className="change-locale">
           <span style={{ marginRight: 16 }}>Change locale of components: </span>
-          <Radio.Group defaultValue={null} onChange={this.changeLocale}>
-            <Radio.Button key="en" value={null}>English</Radio.Button>
+          <Radio.Group defaultValue={undefined} onChange={this.changeLocale}>
+            <Radio.Button key="en" value={undefined}>English</Radio.Button>
             <Radio.Button key="cn" value={zhCN}>中文</Radio.Button>
           </Radio.Group>
         </div>
-        <LocaleProvider locale={this.state.locale}>
-          <Page key={forceRerender++ /* HACK: just refresh in production environment */} />
+        <LocaleProvider locale={locale}>
+          <Page key={locale ? locale.locale : 'en'/* Have to refresh for production environment */} />
         </LocaleProvider>
       </div>
     );

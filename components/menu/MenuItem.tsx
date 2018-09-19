@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Item } from 'rc-menu';
-import PropTypes from 'prop-types';
+import * as PropTypes from 'prop-types';
 import Tooltip from '../tooltip';
 
 class MenuItem extends React.Component<any, any> {
@@ -18,13 +18,15 @@ class MenuItem extends React.Component<any, any> {
   render() {
     const { inlineCollapsed } = this.context;
     const props = this.props;
-    return <Tooltip
-      title={inlineCollapsed && props.level === 1 ? props.children : ''}
-      placement="right"
-      overlayClassName={`${props.rootPrefixCls}-inline-collapsed-tooltip`}
-    >
-      <Item {...props} ref={this.saveMenuItem} />
-    </Tooltip>;
+    return (
+      <Tooltip
+        title={inlineCollapsed && props.level === 1 ? props.children : ''}
+        placement="right"
+        overlayClassName={`${props.rootPrefixCls}-inline-collapsed-tooltip`}
+      >
+        <Item {...props} ref={this.saveMenuItem} />
+      </Tooltip>
+    );
   }
 }
 

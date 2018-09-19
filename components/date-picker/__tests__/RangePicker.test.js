@@ -1,14 +1,23 @@
 import React from 'react';
 import { mount, render } from 'enzyme';
 import moment from 'moment';
-import DatePicker from '../';
+import DatePicker from '..';
 import { setMockDate, resetMockDate } from '../../../tests/utils';
+import { selectDate, openPanel } from './utils';
 import focusTest from '../../../tests/shared/focusTest';
 
 const { RangePicker } = DatePicker;
 
 describe('RangePicker', () => {
   focusTest(RangePicker);
+
+  beforeEach(() => {
+    setMockDate();
+  });
+
+  afterEach(() => {
+    resetMockDate();
+  });
 
   it('show month panel according to value', () => {
     const birthday = moment('2000-01-01', 'YYYY-MM-DD').locale('zh-cn');
@@ -41,7 +50,7 @@ describe('RangePicker', () => {
     );
 
     const rangeCalendarWrapper = mount(wrapper.find('Trigger').instance().getComponent());
-    rangeCalendarWrapper.find('.ant-calendar-range-quick-selector a')
+    rangeCalendarWrapper.find('.ant-calendar-range-quick-selector Tag')
       .simulate('click');
     expect(render(wrapper.find('Trigger').instance().getComponent()))
       .toMatchSnapshot();
@@ -60,7 +69,7 @@ describe('RangePicker', () => {
     );
 
     let rangeCalendarWrapper = mount(wrapper.find('Trigger').instance().getComponent());
-    rangeCalendarWrapper.find('.ant-calendar-range-quick-selector a')
+    rangeCalendarWrapper.find('.ant-calendar-range-quick-selector Tag')
       .simulate('mouseEnter');
     rangeCalendarWrapper = mount(wrapper.find('Trigger').instance().getComponent());
     expect(rangeCalendarWrapper.find('.ant-calendar-selected-day').length).toBe(2);
@@ -115,7 +124,6 @@ describe('RangePicker', () => {
   });
 
   it('clear hover value after panel close', () => {
-    setMockDate();
     jest.useFakeTimers();
     const wrapper = mount(
       <div>
@@ -131,6 +139,89 @@ describe('RangePicker', () => {
     expect(
       wrapper.find('.ant-calendar-cell').at(23).hasClass('ant-calendar-in-range-cell')
     ).toBe(true);
-    resetMockDate();
+  });
+
+  describe('preset range', () => {
+    it('static range', () => {
+      const range = [moment().subtract(2, 'd'), moment()];
+      const format = 'YYYY-MM-DD HH:mm:ss';
+      const wrapper = mount(
+        <RangePicker
+          ranges={{ 'recent two days': range }}
+          format={format}
+        />
+      );
+      wrapper.find('.ant-calendar-picker-input').simulate('click');
+      wrapper.find('.ant-calendar-range-quick-selector Tag').simulate('click');
+      expect(
+        wrapper.find('.ant-calendar-range-picker-input').first().getDOMNode().value
+      ).toBe(range[0].format(format));
+      expect(
+        wrapper.find('.ant-calendar-range-picker-input').last().getDOMNode().value
+      ).toBe(range[1].format(format));
+    });
+
+    it('function range', () => {
+      const range = [moment().subtract(2, 'd'), moment()];
+      const format = 'YYYY-MM-DD HH:mm:ss';
+      const wrapper = mount(
+        <RangePicker
+          ranges={{ 'recent two days': () => range }}
+          format={format}
+        />
+      );
+      wrapper.find('.ant-calendar-picker-input').simulate('click');
+      wrapper.find('.ant-calendar-range-quick-selector Tag').simulate('click');
+      expect(
+        wrapper.find('.ant-calendar-range-picker-input').first().getDOMNode().value
+      ).toBe(range[0].format(format));
+      expect(
+        wrapper.find('.ant-calendar-range-picker-input').last().getDOMNode().value
+      ).toBe(range[1].format(format));
+    });
+  });
+
+  // https://github.com/ant-design/ant-design/issues/6999
+  it('input date manually', () => {
+    const wrapper = mount(<RangePicker open />);
+    const dateString = '2008-12-31';
+    const input = wrapper.find('.ant-calendar-input').first();
+    input.simulate('change', { target: { value: dateString } });
+    expect(input.getDOMNode().value).toBe(dateString);
+  });
+
+  it('triggers onOk when click on preset range', () => {
+    const handleOk = jest.fn();
+    const range = [moment().subtract(2, 'd'), moment()];
+    const wrapper = mount(
+      <RangePicker
+        ranges={{ 'recent two days': range }}
+        onOk={handleOk}
+      />
+    );
+    wrapper.find('.ant-calendar-picker-input').simulate('click');
+    wrapper.find('.ant-calendar-range-quick-selector Tag').simulate('click');
+    expect(handleOk).toBeCalledWith(range);
+  });
+
+  // https://github.com/ant-design/ant-design/issues/9267
+  it('invali end date not throw error', () => {
+    const wrapper = mount(<RangePicker />);
+    wrapper.find('.ant-calendar-picker-input').simulate('click');
+    selectDate(wrapper, moment('2017-09-18'), 0);
+    selectDate(wrapper, moment('2017-10-18'), 1);
+    wrapper.find('.ant-calendar-picker-input').simulate('click');
+    expect(() => (
+      wrapper.find('.ant-calendar-input').at(1).simulate('change', { target: { value: '2016-01-01' } })
+    )).not.toThrow();
+  });
+
+  it('changes year/month when under control', () => {
+    const wrapper = mount(<RangePicker value={[moment('2018-07-01'), moment('2018-07-02')]} />);
+    openPanel(wrapper);
+    expect(wrapper.find('.ant-calendar-my-select').first().text()).toBe('Jul2018');
+    wrapper.find('.ant-calendar-prev-year-btn').first().simulate('click');
+    wrapper.find('.ant-calendar-prev-month-btn').first().simulate('click');
+    expect(wrapper.find('.ant-calendar-my-select').first().text()).toBe('Jun2017');
   });
 });
