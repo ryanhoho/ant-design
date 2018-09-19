@@ -1,5 +1,5 @@
 import * as React from 'react';
-import debounce from 'lodash.debounce';
+import debounce from 'lodash/debounce';
 
 // matchMedia polyfill for
 // https://github.com/WickyNilliams/enquire.js/issues/82
@@ -122,8 +122,8 @@ export default class Carousel extends React.Component<CarouselProps, {}> {
     this.slick.slickPrev();
   }
 
-  goTo(slide: number) {
-    this.slick.slickGoTo(slide);
+  goTo(slide: number, dontAnimate = false) {
+    this.slick.slickGoTo(slide, dontAnimate);
   }
 
   render() {

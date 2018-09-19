@@ -5,8 +5,10 @@ import { TreeSelectProps } from './interface';
 import { SelectLocale } from '../select';
 import LocaleReceiver from '../locale-provider/LocaleReceiver';
 import warning from '../_util/warning';
+import Icon from '../icon';
+import { AntTreeNodeProps } from '../tree';
 
-export { TreeData, TreeSelectProps } from './interface';
+export { TreeNode, TreeSelectProps } from './interface';
 
 export default class TreeSelect extends React.Component<TreeSelectProps, any> {
   static TreeNode = TreeNode;
@@ -19,7 +21,6 @@ export default class TreeSelect extends React.Component<TreeSelectProps, any> {
     transitionName: 'slide-up',
     choiceTransitionName: 'zoom',
     showSearch: false,
-    dropdownClassName: 'ant-select-tree-dropdown',
   };
 
   private rcTreeSelect: any;
@@ -45,6 +46,26 @@ export default class TreeSelect extends React.Component<TreeSelectProps, any> {
     this.rcTreeSelect = node;
   }
 
+  renderSwitcherIcon = ({ isLeaf, loading }: AntTreeNodeProps) => {
+    const {
+      prefixCls,
+    } = this.props;
+    if (loading) {
+      return (
+        <Icon
+          type="loading"
+          className={`${prefixCls}-switcher-loading-icon`}
+        />
+      );
+    }
+    if (isLeaf) {
+      return null;
+    }
+    return (
+      <Icon type="caret-down" className={`${prefixCls}-switcher-icon`} />
+    );
+  }
+
   renderTreeSelect = (locale: SelectLocale) => {
     const {
       prefixCls,
@@ -52,7 +73,8 @@ export default class TreeSelect extends React.Component<TreeSelectProps, any> {
       size,
       notFoundContent,
       dropdownStyle,
-      ...restProps,
+      dropdownClassName,
+      ...restProps
     } = this.props;
 
     const cls = classNames({
@@ -64,15 +86,33 @@ export default class TreeSelect extends React.Component<TreeSelectProps, any> {
     if (checkable) {
       checkable = <span className={`${prefixCls}-tree-checkbox-inner`} />;
     }
+
+    const inputIcon = (
+      <Icon type="down" className={`${prefixCls}-arrow-icon`} />
+    );
+
+    const removeIcon = (
+      <Icon type="close" className={`${prefixCls}-remove-icon`} />
+    );
+
+    const clearIcon = (
+      <Icon type="close-circle" className={`${prefixCls}-clear-icon`} theme="filled" />
+    );
+
     return (
       <RcTreeSelect
         {...restProps}
+        dropdownClassName={classNames(dropdownClassName, `${prefixCls}-tree-dropdown`)}
         prefixCls={prefixCls}
         className={cls}
         dropdownStyle={{ maxHeight: '100vh', overflow: 'auto', ...dropdownStyle }}
         treeCheckable={checkable}
         notFoundContent={notFoundContent || locale.notFoundContent}
         ref={this.saveTreeSelect}
+        switcherIcon={this.renderSwitcherIcon}
+        inputIcon={inputIcon}
+        removeIcon={removeIcon}
+        clearIcon={clearIcon}
       />
     );
   }

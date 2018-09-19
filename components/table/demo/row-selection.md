@@ -23,7 +23,7 @@ import { Table } from 'antd';
 const columns = [{
   title: 'Name',
   dataIndex: 'name',
-  render: text => <a href="#">{text}</a>,
+  render: text => <a href="javascript:;">{text}</a>,
 }, {
   title: 'Age',
   dataIndex: 'age',
@@ -65,6 +65,6 @@ const rowSelection = {
 };
 
 ReactDOM.render(
-  <Table rowSelection={rowSelection} columns={columns} dataSource={data} />
-, mountNode);
+  <Table rowSelection={rowSelection} columns={columns} dataSource={data} />,
+  mountNode);
 ````

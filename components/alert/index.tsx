@@ -1,8 +1,9 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import Animate from 'rc-animate';
-import Icon from '../icon';
+import Icon, { ThemeType } from '../icon';
 import classNames from 'classnames';
+import getDataOrAriaProps from '../_util/getDataOrAriaProps';
 
 function noop() { }
 
@@ -21,6 +22,8 @@ export interface AlertProps {
   description?: React.ReactNode;
   /** Callback when close Alert */
   onClose?: React.MouseEventHandler<HTMLAnchorElement>;
+  /** Trigger when animation ending of Alert */
+  afterClose?: () => void;
   /** Whether to show icon */
   showIcon?: boolean;
   iconType?: string;
@@ -56,6 +59,7 @@ export default class Alert extends React.Component<AlertProps, any> {
       closed: true,
       closing: true,
     });
+    (this.props.afterClose || noop)();
   }
   render() {
     let {
@@ -68,6 +72,7 @@ export default class Alert extends React.Component<AlertProps, any> {
     // banner模式默认为警告
     type = banner && type === undefined ? 'warning' : type || 'info';
 
+    let iconTheme: ThemeType = 'filled';
     if (!iconType) {
       switch (type) {
         case 'success':
@@ -77,7 +82,7 @@ export default class Alert extends React.Component<AlertProps, any> {
           iconType = 'info-circle';
           break;
         case 'error':
-          iconType = 'cross-circle';
+          iconType = 'close-circle';
           break;
         case 'warning':
           iconType = 'exclamation-circle';
@@ -88,12 +93,11 @@ export default class Alert extends React.Component<AlertProps, any> {
 
       // use outline icon in alert with description
       if (!!description) {
-        iconType += '-o';
+        iconTheme = 'outlined';
       }
     }
 
-    let alertCls = classNames(prefixCls, {
-      [`${prefixCls}-${type}`]: true,
+    const alertCls = classNames(prefixCls, `${prefixCls}-${type}`, {
       [`${prefixCls}-close`]: !this.state.closing,
       [`${prefixCls}-with-description`]: !!description,
       [`${prefixCls}-no-icon`]: !showIcon,
@@ -107,9 +111,13 @@ export default class Alert extends React.Component<AlertProps, any> {
 
     const closeIcon = closable ? (
       <a onClick={this.handleClose} className={`${prefixCls}-close-icon`}>
-        {closeText || <Icon type="cross" />}
+        {closeText || <Icon type="close" />}
       </a>
     ) : null;
+
+    const dataOrAriaProps = getDataOrAriaProps(this.props);
+
+    const iconNode = <Icon className={`${prefixCls}-icon`} type={iconType} theme={iconTheme} />;
 
     return this.state.closed ? null : (
       <Animate
@@ -118,8 +126,8 @@ export default class Alert extends React.Component<AlertProps, any> {
         transitionName={`${prefixCls}-slide-up`}
         onEnd={this.animationEnd}
       >
-        <div data-show={this.state.closing} className={alertCls} style={style}>
-          {showIcon ? <Icon className={`${prefixCls}-icon`} type={iconType} /> : null}
+        <div data-show={this.state.closing} className={alertCls} style={style} {...dataOrAriaProps}>
+          {showIcon ? iconNode : null}
           <span className={`${prefixCls}-message`}>{message}</span>
           <span className={`${prefixCls}-description`}>{description}</span>
           {closeIcon}

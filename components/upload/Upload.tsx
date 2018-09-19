@@ -1,33 +1,52 @@
 import * as React from 'react';
+import { polyfill } from 'react-lifecycles-compat';
 import RcUpload from 'rc-upload';
 import classNames from 'classnames';
-import uniqBy from 'lodash.uniqby';
+import uniqBy from 'lodash/uniqBy';
 import LocaleReceiver from '../locale-provider/LocaleReceiver';
 import defaultLocale from '../locale-provider/default';
 import Dragger from './Dragger';
 import UploadList from './UploadList';
-import { UploadProps, UploadState, UploadFile, UploadLocale, UploadChangeParam } from './interface';
+import {
+  RcFile,
+  UploadProps,
+  UploadState,
+  UploadFile,
+  UploadLocale,
+  UploadChangeParam,
+  UploadType,
+  UploadListType,
+} from './interface';
 import { T, fileToObject, genPercentAdd, getFileItem, removeFileItem } from './utils';
 
 export { UploadProps };
 
-export default class Upload extends React.Component<UploadProps, UploadState> {
+class Upload extends React.Component<UploadProps, UploadState> {
   static Dragger: typeof Dragger;
 
   static defaultProps = {
     prefixCls: 'ant-upload',
-    type: 'select',
+    type: 'select' as UploadType,
     multiple: false,
     action: '',
     data: {},
     accept: '',
     beforeUpload: T,
     showUploadList: true,
-    listType: 'text', // or pictrue
+    listType: 'text' as UploadListType, // or pictrue
     className: '',
     disabled: false,
     supportServerRender: true,
   };
+
+  static getDerivedStateFromProps(nextProps: UploadProps) {
+    if ('fileList' in nextProps) {
+      return {
+        fileList: nextProps.fileList || [],
+      };
+    }
+    return null;
+  }
 
   recentUploadStatus: boolean | PromiseLike<any>;
   progressTimer: any;
@@ -47,7 +66,7 @@ export default class Upload extends React.Component<UploadProps, UploadState> {
     this.clearProgressTimer();
   }
 
-  onStart = (file: UploadFile) => {
+  onStart = (file: RcFile) => {
     let targetItem;
     let nextFileList = this.state.fileList.concat();
     targetItem = fileToObject(file);
@@ -70,7 +89,7 @@ export default class Upload extends React.Component<UploadProps, UploadState> {
     this.progressTimer = setInterval(() => {
       curPercent = getPercent(curPercent);
       this.onProgress({
-        percent: curPercent,
+        percent: curPercent * 100,
       }, file);
     }, 200);
   }
@@ -165,21 +184,13 @@ export default class Upload extends React.Component<UploadProps, UploadState> {
     }
   }
 
-  componentWillReceiveProps(nextProps: UploadProps) {
-    if ('fileList' in nextProps) {
-      this.setState({
-        fileList: nextProps.fileList || [],
-      });
-    }
-  }
-
   onFileDrop = (e: React.DragEvent<HTMLDivElement>) => {
     this.setState({
       dragState: e.type,
     });
   }
 
-  beforeUpload = (file: UploadFile, fileList: UploadFile[]) => {
+  beforeUpload = (file: RcFile, fileList: RcFile[]) => {
     if (!this.props.beforeUpload) {
       return true;
     }
@@ -187,7 +198,10 @@ export default class Upload extends React.Component<UploadProps, UploadState> {
     if (result === false) {
       this.onChange({
         file,
-        fileList: uniqBy(fileList.concat(this.state.fileList), (item: any) => item.uid),
+        fileList: uniqBy(
+          this.state.fileList.concat(fileList.map(fileToObject)),
+          (item: UploadFile) => item.uid,
+        ),
       });
       return false;
     } else if (result && (result as PromiseLike<any>).then) {
@@ -305,3 +319,7 @@ export default class Upload extends React.Component<UploadProps, UploadState> {
     );
   }
 }
+
+polyfill(Upload);
+
+export default Upload;

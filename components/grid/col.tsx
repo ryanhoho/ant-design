@@ -1,5 +1,5 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
+import * as PropTypes from 'prop-types';
 import classNames from 'classnames';
 
 const stringOrNumber = PropTypes.oneOfType([PropTypes.string, PropTypes.number]);
@@ -13,8 +13,7 @@ export interface ColSize {
   pull?: number;
 }
 
-export interface ColProps {
-  className?: string;
+export interface ColProps extends React.HTMLAttributes<HTMLDivElement> {
   span?: number;
   order?: number;
   offset?: number;
@@ -27,7 +26,6 @@ export interface ColProps {
   xl?: number | ColSize;
   xxl?: number | ColSize;
   prefixCls?: string;
-  style?: React.CSSProperties;
 }
 
 export default class Col extends React.Component<ColProps, {}> {

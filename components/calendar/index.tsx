@@ -1,11 +1,11 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
+import * as PropTypes from 'prop-types';
 import * as moment from 'moment';
 import FullCalendar from 'rc-calendar/lib/FullCalendar';
 import LocaleReceiver from '../locale-provider/LocaleReceiver';
 import { PREFIX_CLS } from './Constants';
 import Header from './Header';
-import callMoment from '../_util/callMoment';
+import interopDefault from '../_util/interopDefault';
 import enUS from './locale/en_US';
 
 export { HeaderProps } from './Header';
@@ -36,7 +36,9 @@ export interface CalendarProps {
   style?: React.CSSProperties;
   onPanelChange?: (date?: moment.Moment, mode?: CalendarMode) => void;
   onSelect?: (date?: moment.Moment) => void;
+  onChange?: (date?: moment.Moment) => void;
   disabledDate?: (current: moment.Moment) => boolean;
+  validRange ?: [moment.Moment, moment.Moment];
 }
 
 export interface CalendarState {
@@ -52,6 +54,7 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
     mode: 'month',
     onSelect: noop,
     onPanelChange: noop,
+    onChange: noop,
   };
 
   static propTypes = {
@@ -67,13 +70,14 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
     onPanelChange: PropTypes.func,
     value: PropTypes.object,
     onSelect: PropTypes.func,
+    onChange: PropTypes.func,
   };
 
   constructor(props: CalendarProps) {
     super(props);
 
-    const value = props.value || props.defaultValue || callMoment(moment);
-    if (!moment.isMoment(value)) {
+    const value = props.value || props.defaultValue || interopDefault(moment)();
+    if (!interopDefault(moment).isMoment(value)) {
       throw new Error(
         'The value/defaultValue of Calendar must be a moment object after `antd@2.0`, ' +
         'see: https://u.ant.design/calendar-value',
@@ -156,15 +160,33 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
   }
 
   onPanelChange(value: moment.Moment, mode: CalendarMode | undefined) {
-    const { onPanelChange } = this.props;
+    const { onPanelChange, onChange } = this.props;
     if (onPanelChange) {
       onPanelChange(value, mode);
+    }
+    if (onChange && value !== this.state.value) {
+      onChange(value);
     }
   }
 
   onSelect = (value: moment.Moment) => {
     this.setValue(value, 'select');
   }
+
+  getDateRange = (
+    validRange: [moment.Moment, moment.Moment],
+    disabledDate?: (current: moment.Moment) => boolean,
+  ) => (current: moment.Moment) => {
+      if (!current) {
+        return false;
+      }
+      const [ startDate, endDate ] = validRange;
+      const inRange = !current.isBetween(startDate, endDate, 'days', '[]');
+      if (disabledDate) {
+        return (disabledDate(current) || inRange);
+      }
+      return inRange;
+    }
 
   renderCalendar = (locale: any, localeCode: string) => {
     const { state, props } = this;
@@ -183,6 +205,12 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
     const monthCellRender = monthFullCellRender || this.monthCellRender;
     const dateCellRender = dateFullCellRender || this.dateCellRender;
 
+    let disabledDate = props.disabledDate;
+
+    if (props.validRange) {
+      disabledDate = this.getDateRange(props.validRange, disabledDate);
+    }
+
     return (
       <div className={cls} style={style}>
         <Header
@@ -193,9 +221,11 @@ export default class Calendar extends React.Component<CalendarProps, CalendarSta
           prefixCls={prefixCls}
           onTypeChange={this.onHeaderTypeChange}
           onValueChange={this.onHeaderValueChange}
+          validRange={props.validRange}
         />
         <FullCalendar
           {...props}
+          disabledDate={disabledDate}
           Select={noop}
           locale={locale.lang}
           type={type}

@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { cloneElement } from 'react';
+import { polyfill } from 'react-lifecycles-compat';
 import RcTooltip from 'rc-tooltip';
 import classNames from 'classnames';
 import getPlacements, { AdjustOverflow, PlacementsConfig } from './placements';
@@ -11,6 +12,8 @@ export type TooltipPlacement =
   'top' | 'left' | 'right' | 'bottom' |
   'topLeft' | 'topRight' | 'bottomLeft' | 'bottomRight' |
   'leftTop' | 'leftBottom' | 'rightTop' | 'rightBottom';
+
+export type TooltipTrigger = 'hover' | 'focus' | 'click' | 'contextMenu';
 
 export interface AbstractTooltipProps {
   prefixCls?: string;
@@ -25,7 +28,7 @@ export interface AbstractTooltipProps {
   mouseEnterDelay?: number;
   mouseLeaveDelay?: number;
   transitionName?: string;
-  trigger?: 'hover' | 'focus' | 'click';
+  trigger?: TooltipTrigger;
   openClassName?: string;
   arrowPointAtCenter?: boolean;
   autoAdjustOverflow?: boolean | AdjustOverflow;
@@ -44,26 +47,33 @@ export interface TooltipProps extends AbstractTooltipProps {
 
 const splitObject = (obj: any, keys: string[]) => {
   const picked: any = {};
-  const omited: any = { ...obj };
+  const omitted: any = { ...obj };
   keys.forEach(key => {
     if (obj && key in obj) {
       picked[key] = obj[key];
-      delete omited[key];
+      delete omitted[key];
     }
   });
-  return { picked, omited };
+  return { picked, omitted };
 };
 
-export default class Tooltip extends React.Component<TooltipProps, any> {
+class Tooltip extends React.Component<TooltipProps, any> {
   static defaultProps = {
     prefixCls: 'ant-tooltip',
-    placement: 'top',
+    placement: 'top' as TooltipPlacement,
     transitionName: 'zoom-big-fast',
     mouseEnterDelay: 0.1,
     mouseLeaveDelay: 0.1,
     arrowPointAtCenter: false,
     autoAdjustOverflow: true,
   };
+
+  static getDerivedStateFromProps(nextProps: TooltipProps) {
+    if ('visible' in nextProps) {
+      return { visible: nextProps.visible };
+    }
+    return null;
+  }
 
   private tooltip: typeof RcTooltip;
 
@@ -73,12 +83,6 @@ export default class Tooltip extends React.Component<TooltipProps, any> {
     this.state = {
       visible: !!props.visible || !!props.defaultVisible,
     };
-  }
-
-  componentWillReceiveProps(nextProps: TooltipProps) {
-    if ('visible' in nextProps) {
-      this.setState({ visible: nextProps.visible });
-    }
   }
 
   onVisibleChange = (visible: boolean) => {
@@ -123,7 +127,7 @@ export default class Tooltip extends React.Component<TooltipProps, any> {
         element.props.disabled && this.isHoverTrigger()) {
       // Pick some layout related style properties up to span
       // Prevent layout bugs like https://github.com/ant-design/ant-design/issues/5254
-      const { picked, omited } = splitObject(
+      const { picked, omitted } = splitObject(
         element.props.style,
         ['position', 'left', 'right', 'top', 'bottom', 'float', 'display', 'zIndex'],
       );
@@ -133,7 +137,7 @@ export default class Tooltip extends React.Component<TooltipProps, any> {
         cursor: 'not-allowed',
       };
       const buttonStyle = {
-        ...omited,
+        ...omitted,
         pointerEvents: 'none',
       };
       const child = cloneElement(element, {
@@ -224,3 +228,7 @@ export default class Tooltip extends React.Component<TooltipProps, any> {
     );
   }
 }
+
+polyfill(Tooltip);
+
+export default Tooltip;

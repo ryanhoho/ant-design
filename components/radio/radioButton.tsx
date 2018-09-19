@@ -1,9 +1,11 @@
 import * as React from 'react';
-import PropTypes from 'prop-types';
+import * as PropTypes from 'prop-types';
 import { AbstractCheckboxProps } from '../checkbox/Checkbox';
 import Radio from './radio';
+import { RadioChangeEvent } from './interface';
+import Wave from '../_util/wave';
 
-export type RadioButtonProps = AbstractCheckboxProps;
+export type RadioButtonProps = AbstractCheckboxProps<RadioChangeEvent>;
 
 export default class RadioButton extends React.Component<RadioButtonProps, any> {
   static defaultProps = {
@@ -23,7 +25,9 @@ export default class RadioButton extends React.Component<RadioButtonProps, any> 
     }
 
     return (
-      <Radio {...radioProps} />
+      <Wave>
+        <Radio {...radioProps} />
+      </Wave>
     );
   }
 }
